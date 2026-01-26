@@ -4,6 +4,10 @@
 
 ![Banner](https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=1000)
 
+<img width="1582" height="849" alt="image" src="https://github.com/user-attachments/assets/c305653e-1ed4-442a-b5a2-e372cb38ce34" />
+<img width="1600" height="858" alt="image" src="https://github.com/user-attachments/assets/a18d7f15-bccb-4b8e-9f41-3d5be536244e" />
+
+
 ## ✨ Features
 
 - 🔍 **Static Code Analysis**: Scans Python code templates using AST (Abstract Syntax Tree).
