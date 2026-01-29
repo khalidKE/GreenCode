@@ -56,7 +56,11 @@ st.markdown("""
 # Application Header
 col1, col2 = st.columns([1, 4])
 with col1:
-    st.image("https://img.icons8.com/color/96/000000/ecology-bag.png", width=80) 
+    # Use the locally generated logo if available, otherwise fallback to emoji
+    try:
+        st.image("green_code_logo.png", width=80) 
+    except:
+        st.markdown("# 🌿")
 with col2:
     st.title("Green Code AI Engine")
     st.markdown("### Transform Dirty Code into Eco-Friendly Logic 🌍")
