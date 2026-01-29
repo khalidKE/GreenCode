@@ -1,0 +1,21 @@
+Example_ID,Duration_sec,Emissions_kg,Green_Code_Fix
+gen_exp,0.004283428192138672,3.7014190114178963e-07,Use generator: sum(x for x in data)
+str_concat,0.0013260841369628906,1.9368573953742333e-07,N/A
+set_lookup,0.0026390552520751953,1.099169725408805e-05,N/A
+file_stream,0.006551027297973633,4.426849827625991e-07,Use streaming: with open() as f: for line in f:
+nested_loops,0.0,1.8077417011699966e-07,Use HashMaps/Sets to reduce complexity to O(n)
+busy_wait,0.010256528854370117,7.060765315522411e-07,N/A
+map_filter,0.002023935317993164,3.0870632095306327e-07,Use list comprehensions
+global_vars,0.0015463829040527344,3.436160185610656e-07,Use local variables instead of globals
+pandas_iter,0.012221097946166992,9.900428198348001e-07,Use .itertuples() for Pandas iteration
+len_cache,0.0021142959594726562,2.2366213182465323e-07,Cache len() in a variable before the loop
+enumerate_opt,0.002145528793334961,2.079216862262127e-07,Use enumerate()
+dict_keys,0.0036058425903320312,4.1925744595262244e-07,Check 'if k in d' directly
+huge_str_io,0.001148223876953125,2.0420202375993228e-07,N/A
+tuple_swap,0.004071235656738281,1.9352938063473156e-07,"Use 'a, b = b, a'"
+import_loop,0.0022025108337402344,2.497407994349192e-07,Move imports to top of file
+while_one,0.002970457077026367,1.828687773188988e-07,Use 'while True'
+list_extend,0.0006532669067382812,1.868018292891678e-07,Use .extend()
+try_loop,0.0027725696563720703,2.2979117871909273e-07,Move try/except outside the loop
+math_pow,0.002772092819213867,2.438159537652012e-07,Use 'x * x'
+manual_gc,0.0023479461669921875,2.621978666786344e-07,Enable gc.collect() manually
