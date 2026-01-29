@@ -79,6 +79,8 @@ The engine uses a weighted operation model to estimate energy consumption:
 - **Pattern Matching**: Detects anti-patterns like `range(len())`.
 - **Global Averages**: Converts energy (Wh) to CO2 using global carbon intensity averages (0.475g per Wh).
 
+streamlit run app.py
+
 ## 📄 License
 
 Distributed under the MIT License. See `LICENSE` for more information.
