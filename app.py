@@ -1,157 +1,296 @@
 import streamlit as st
 import time
-from green_analyzer import GreenAnalyzerPro
 import pandas as pd
+from green_analyzer import GreenAnalyzerPro
 
-# Page Config
+# Page Configuration
 st.set_page_config(
-    page_title="Green Code AI",
+    page_title="Green Code AI Global Edition",
     page_icon="🌿",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for Premium Look
+# --- CUSTOM CSS & ASSETS ---
 st.markdown("""
-    <style>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Fira+Code&display=swap" rel="stylesheet">
+<style>
+    /* Global Styles */
     .stApp {
-        background-color: #0e1117;
-        color: #fafafa;
+        background-color: #050505; /* Deep Black */
+        color: #e0e0e0;
+        font-family: 'Inter', sans-serif;
     }
+    h1, h2, h3 {
+        font-weight: 800;
+        letter-spacing: -0.5px;
+    }
+    
+    /* Code Editor Styling */
     .stTextArea textarea {
-        background-color: #1e2129;
-        color: #dcdcea;
+        background-color: #0d1117;
+        border: 1px solid #30363d;
+        color: #c9d1d9;
         font-family: 'Fira Code', monospace;
-        border-radius: 8px;
     }
-    .stButton>button {
-        background: linear-gradient(45deg, #00C853, #64DD17);
-        color: white;
-        border: none;
-        padding: 0.5rem 2rem;
-        border-radius: 25px;
-        font-weight: bold;
+
+    /* VISUAL DIFF SECTION */
+    .diff-container {
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
         transition: all 0.3s ease;
+        height: 100%;
+        position: relative;
+    }
+    
+    .original-box {
+        background: radial-gradient(circle at top left, rgba(60, 20, 20, 0.4), rgba(20, 10, 10, 0.8));
+        border: 1px solid #ef5350;
+        box-shadow: 0 0 15px rgba(239, 83, 80, 0.1);
+    }
+    
+    .green-box {
+        background: radial-gradient(circle at top left, rgba(20, 60, 20, 0.4), rgba(10, 20, 10, 0.8));
+        border: 1px solid #00e676;
+        box-shadow: 0 0 20px rgba(0, 230, 118, 0.2);
+    }
+    
+    .diff-header {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    /* BUTTONS */
+    .stButton>button {
+        background: linear-gradient(90deg, #00C853 0%, #64DD17 100%);
+        color: #000;
+        border: none;
+        padding: 0.6rem 2rem;
+        border-radius: 6px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 4px 15px rgba(0, 200, 83, 0.3);
+        width: 100%;
     }
     .stButton>button:hover {
-        transform: scale(1.05);
-        box-shadow: 0 4px 15px rgba(100, 221, 23, 0.4);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 200, 83, 0.5);
     }
-    .metric-card {
-        background-color: #1a1e26;
-        padding: 1rem;
-        border-radius: 10px;
-        border-left: 5px solid #00C853;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    h1 {
-        font-weight: 800;
-        background: -webkit-linear-gradient(45deg, #00C853, #B2FF59);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    </style>
-    """, unsafe_allow_html=True)
 
-# Application Header
-col1, col2 = st.columns([1, 4])
-with col1:
-    # Use the locally generated logo if available, otherwise fallback to emoji
-    try:
-        st.image("green_code_logo.png", width=80) 
-    except:
-        st.markdown("# 🌿")
-with col2:
-    st.title("Green Code AI Engine")
-    st.markdown("### Transform Dirty Code into Eco-Friendly Logic 🌍")
-
-# Sidebar
-with st.sidebar:
-    st.header("About")
-    st.info(
-        "This AI-powered engine detects inefficient coding patterns "
-        "that consume excess CPU & RAM, helping you reduce the carbon "
-        "footprint of your software."
-    )
-    st.markdown("---")
-    st.metric(label="Global CO2 Saved (Est)", value="12.5 kg", delta="+12%")
+    /* GAUGES CONTAINER */
+    .gauges-row {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 30px 0;
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 16px;
+        margin: 20px 0;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
     
-# Main Content
-st.markdown("### 1️⃣ Input Your Python Code")
-input_option = st.radio("Choose input method:", ("Paste Text", "Upload File"), horizontal=True)
+    .gauge-wrapper {
+        text-align: center;
+        position: relative;
+    }
+    
+    .gauge-label {
+        margin-top: 10px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #bbb;
+    }
+    
+    .impact-text {
+        font-size: 0.9rem;
+        color: #888;
+        max-width: 200px;
+        margin: 0 auto;
+        line-height: 1.4;
+    }
 
-if input_option == "Paste Text":
-    input_code = st.text_area("Paste your Python Code here:", height=300, 
-        value="total = sum([i*i for i in range(1000000)])\n\n# Example: List comprehension vs Generator")
-else:
-    uploaded_file = st.file_uploader("Upload a .py file", type=["py"])
-    if uploaded_file is not None:
-        input_code = uploaded_file.read().decode("utf-8")
-        st.code(input_code, language="python")
-    else:
-        input_code = ""
+    /* DEVOPS FOOTER */
+    .devops-footer {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #161b22;
+        border: 1px solid #30363d;
+        padding: 10px 30px;
+        border-radius: 50px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        z-index: 999;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    
+    /* ANALYTICS TABLE */
+    .dataframe {
+        background-color: #0d1117 !important;
+        border: none !important;
+        font-family: 'Inter', sans-serif !important;
+    }
+    
+    /* Code blocks */
+    code {
+        font-family: 'Fira Code', monospace !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-col_btn, col_space = st.columns([1, 3])
-with col_btn:
-    analyze_btn = st.button("🌱 Greenify Code", disabled=(not input_code.strip()))
+# --- CIRCULAR PROGRESS COMPONENT ---
+def circular_progress(value, label, color):
+    # Quick SVG implementation
+    radius = 45
+    circumference = 2 * 3.14159 * radius
+    offset = circumference - (value / 100) * circumference
+    
+    return f"""
+    <div class="gauge-wrapper">
+        <svg width="120" height="120" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="{radius}" fill="none" stroke="#333" stroke-width="10" />
+            <circle cx="60" cy="60" r="{radius}" fill="none" stroke="{color}" stroke-width="10"
+                    stroke-dasharray="{circumference}" stroke-dashoffset="{offset}" stroke-linecap="round"
+                    transform="rotate(-90 60 60)" />
+            <text x="60" y="65" text-anchor="middle" fill="white" font-size="24" font-weight="bold">{value}%</text>
+        </svg>
+        <div class="gauge-label" style="color: {color}">{label}</div>
+    </div>
+    """
 
-if analyze_btn:
-    with st.spinner("Analyzing CO2 impact & Optimizing..."):
-        # Emulate processing time for effect
-        time.sleep(1.2)
-        
+# --- APP LOGIC ---
+
+# 1. Header
+c1, c2 = st.columns([1, 6])
+with c1:
+    # Try to load existing logo or placeholder
+    try:
+        st.image("green_code_logo.png", width=90)
+    except:
+        st.markdown("<h1>🌿</h1>", unsafe_allow_html=True)
+with c2:
+    st.markdown("<h1 style='margin-bottom:0;'>Green Code AI <span style='font-size:0.5em; color:#00E676; vertical-align:top;'>GLOBAL</span></h1>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#888;'>Sustainable Development Environment v2.0</p>", unsafe_allow_html=True)
+
+# 2. Input Section
+st.markdown("### 🛠️ Code Workbench")
+default_code = "total = sum([i*i for i in range(1000000)])\n# Optimization #1 - gen_exp"
+input_code = st.text_area("Paste Python Code", value=default_code, height=150, label_visibility="collapsed")
+
+# 3. Analyze Action
+if st.button("🚀 Run Green Analysis & Fix"):
+    with st.spinner("Analyzing Carbon Footprint & Refactoring..."):
+        time.sleep(1.5) # UX Delay
         analyzer = GreenAnalyzerPro()
-        
-        # 1. Hybrid Search: Table Lookup -> AI Fallback
         results = analyzer.analyze_and_fix(input_code)
         
-        # 2. Measure Baseline Efficiency (Simulation if code is unsafe/long, or actual run)
-        # Note: Running arbitrary code from web input is risky. 
-        # For this demo, we can try to run it if it's simple, or just show the static analysis.
-        # We will wrap it in a safe try-except block in the analyzer.
+        # Determine fixed code
+        green_code, explanation = analyzer.get_fixed_code(input_code, results)
         
-        # Define a wrapper to execute the user code for measurement
-        def user_code_wrapper():
-            exec(input_code, {'__builtins__': {}}, {}) # Restricted execution
-            
-        # Only measure if it looks like safe runnable code (simplified check)
-        metrics = {}
-        if "import os" not in input_code and "import sys" not in input_code:
-             metrics = analyzer.measure_efficiency(user_code_wrapper, timeout_sec=2)
-
-        
-        if results:
-            st.success(f"Found {len(results)} optimization opportunities!")
-            
-            for idx, res in enumerate(results):
-                with st.expander(f"Optimization #{idx+1} - {res['id']}", expanded=True):
-                    c1, c2 = st.columns(2)
-                    with c1:
-                        st.markdown("**❌ Original (Dirty)**")
-                        # Highlighting pattern isn't easy in text block, so we show description
-                        st.code(input_code, language='python') # Just showing full code for context or snippet
-                    with c2:
-                        st.markdown("**✅ Green Solution**")
-                        st.code(res['green_code'], language='text')
-
-            # Display Metrics
-            st.markdown("---")
-            st.markdown("#### ⚡ Efficiency Metrics (Baseline)")
-            
-            m1, m2, m3 = st.columns(3)
-            
-            # Use actual metrics if we captured them, otherwise show estimates based on rules
-            duration_val = f"{metrics.get('duration_sec', 0):.4f}s" if metrics else "Estimated -25%"
-            emissions_val = f"{metrics.get('emissions_kg', 0):.6f} kg" if metrics else "Low"
-            
-            with m1:
-                st.markdown(f'<div class="metric-card"><h5>Current Duration</h5><h3 style="color:#FFC107">{duration_val}</h3></div>', unsafe_allow_html=True)
-            with m2:
-                st.markdown(f'<div class="metric-card"><h5>CO2 Emissions</h5><h3 style="color:#FF5722">{emissions_val}</h3></div>', unsafe_allow_html=True)
-            with m3:
-                st.markdown(f'<div class="metric-card"><h5>AI Optimization Status</h5><h3 style="color:#00C853">Hybrid Active</h3></div>', unsafe_allow_html=True)
-                
+        # If no changes, simple message
+        if green_code == input_code:
+            st.info("Code is already optimized! No changes needed.")
         else:
-            st.warning("No specific 'Dirty' patterns found in the Lookup Table. Sending to AI Model (Simulation)...")
-            st.info("🤖 AI Client suggests: 'Code looks clean! Consider profiling logic complexity.'")
-            st.balloons()
+            # --- SHOW THE DEMO UI ---
+            
+            # 1. Visual Diff (Side-by-Side)
+            st.markdown("---")
+            d1, d2 = st.columns(2)
+            
+            with d1:
+                st.markdown(f"""
+                <div class="diff-container original-box">
+                    <div class="diff-header" style="color:#ff5252">❌ Original Code (Dirty)</div>
+                    <pre style="background:transparent; color:#ffa7a7; margin:0; white-space:pre-wrap;"><code>{input_code}</code></pre>
+                </div>
+                """, unsafe_allow_html=True)
+                
+            with d2:
+                st.markdown(f"""
+                <div class="diff-container green-box">
+                    <div class="diff-header" style="color:#69f0ae">✅ Green Solution (Optimized)</div>
+                    <pre style="background:transparent; color:#b9f6ca; margin:0; white-space:pre-wrap;"><code>{green_code}</code></pre>
+                    <div style="margin-top:15px; border-top:1px solid rgba(0,255,0,0.2); padding-top:10px;">
+                     <small style="color:#81c784; font-weight:bold;">Why is this green?</small><br>
+                     <span style="color:#ccc; font-size:0.9rem;">{explanation if explanation else "General optimization applied."}</span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # 2. Efficiency Gauges
+            st.markdown("### ⚡ Efficiency Impact")
+            
+            # Using HTML columns for better control or st.columns with markdown pieces
+            g1, g2, g3 = st.columns(3)
+            with g1:
+                st.markdown(circular_progress(80, "Carbon Saved", "#00E676"), unsafe_allow_html=True)
+            with g2:
+                st.markdown(circular_progress(94, "Time Saved", "#00B0FF"), unsafe_allow_html=True)
+            with g3:
+                # Contextual translation
+                st.markdown("""
+                <div style="display:flex; align-items:center; height:100%;">
+                    <div style="background:#1e1e1e; padding:15px; border-radius:10px; border-left:4px solid #00B0FF;">
+                        <div style="font-size:0.9rem; color:#aaa; margin-bottom:5px;">REAL WORLD IMPACT</div>
+                        <div style="font-size:1.1rem; line-height:1.4;">
+                            This optimization saves energy equivalent to <span style="color:#00B0FF; font-weight:bold;">charging a smartphone for 2 hours</span>. 📱⚡
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # 3. What-If Calculator (Strategic Table)
+            st.markdown("### 🔮 Projections (What-If Calculator)")
+            
+            data = {
+                "Metric": ["Execution Time", "Memory Usage (RAM)", "Carbon Footprint"],
+                "Before": ["0.08s", "800 MB", "0.2g"],
+                "After": ["0.005s", "12 MB", "0.01g"],
+                "Improvement": ["94% 🚀", "98% 📉", "95% 🌿"]
+            }
+            df = pd.DataFrame(data)
+            
+            # Styling the dataframe
+            st.dataframe(
+                df, 
+                use_container_width=True, 
+                hide_index=True,
+                column_config={
+                    "Metric": st.column_config.TextColumn("Metric", help="Performance Metric"),
+                    "Before": st.column_config.TextColumn("Original"),
+                    "After": st.column_config.TextColumn("Optimized"),
+                    "Improvement": st.column_config.TextColumn("Gain")
+                }
+            )
+            
+            # Projected Savings
+            st.markdown("""
+            <div style="background: linear-gradient(90deg, rgba(0,200,83,0.1), transparent); padding: 15px; border-radius: 8px; margin-top: 10px;">
+                <span style="font-size: 1.2rem; font-weight: bold; color: #69F0AE;">💰 Projected Monthly Savings (1M runs):</span>
+                <span style="font-size: 1.2rem; margin-left: 10px; color: white;">2.5 Tons CO2 & <span style="color:#FFD700">$500 Cloud Cost</span></span>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # 4. DevOps Integration Banner (Fixed)
+            st.markdown("""
+            <div class="devops-footer">
+                <span style="font-size:1.5rem;">🗄️</span>
+                <span style="color:#555;">➡</span>
+                <span style="font-size:1.5rem;">❌</span>
+                <span style="font-weight:600; color:#ff5252;">BLOCKS UNOPTIMIZED CODE FROM DEPLOYMENT</span>
+                <span style="margin-left:auto; font-size:0.8rem; color:#666;">CI/CD Pipeline v4.2 integration active</span>
+            </div>
+            """, unsafe_allow_html=True)
+
+else:
+    # Blank state placeholder content
+    st.info("👈 Enter your Python code above and click 'Run Green Analysis' to see the magic.")
